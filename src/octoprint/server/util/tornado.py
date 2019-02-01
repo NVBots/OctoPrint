@@ -59,6 +59,22 @@ def fix_ioloop_scheduling():
 	tornado.ioloop.PeriodicCallback._schedule_next = _schedule_next
 
 
+def fix_json_encode():
+	"""
+	This makes tornado.escape.json_encode use octoprint.util.JsonEncoding.encode as fallback in order to allow
+	serialization of globally registered types like frozendict and others.
+	"""
+
+	from octoprint.util.json import JsonEncoding
+	import json
+
+	def fixed_json_encode(value):
+		return json.dumps(value, default=JsonEncoding.encode).replace("</", "<\\/")
+
+	import tornado.escape
+	tornado.escape.json_encode = fixed_json_encode
+
+
 #~~ More sensible logging
 
 
@@ -1073,6 +1089,26 @@ class StaticDataHandler(RequestlessExceptionLoggingMixin, tornado.web.RequestHan
 		self.write(self.data)
 		self.flush()
 		self.finish()
+
+
+class DeprecatedEndpointHandler(tornado.web.RequestHandler):
+	def initialize(self, url):
+		self._url = url
+		self._logger = logging.getLogger(__name__)
+
+	def _handle_method(self, *args, **kwargs):
+		to_url = self._url.format(*args)
+		self._logger.info("Redirecting deprecated endpoint {} to {}".format(self.request.path, to_url))
+		self.redirect(to_url, permanent=True)
+
+	# make all http methods trigger _handle_method
+	get = _handle_method
+	post = _handle_method
+	put = _handle_method
+	patch = _handle_method
+	delete = _handle_method
+	head = _handle_method
+	options = _handle_method
 
 
 class GlobalHeaderTransform(tornado.web.OutputTransform):
