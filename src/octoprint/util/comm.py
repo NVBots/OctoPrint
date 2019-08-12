@@ -98,7 +98,7 @@ Groups will be as follows:
   * ``size``: size of the file in bytes (int)
 """
 
-regex_temp = re.compile("(?P<tool>B|C|T(?P<toolnum>\d*)):\s*(?P<actual>%s)(\s*\/?\s*(?P<target>%s))?" % (regex_float_pattern, regex_float_pattern))
+regex_temp = re.compile("\s(?P<tool>B|C|T(?P<toolnum>\d*)):\s*(?P<actual>%s)(\s*\/?\s*(?P<target>%s))?" % (regex_float_pattern, regex_float_pattern))
 """Regex matching temperature entries in line.
 
 Groups will be as follows:
